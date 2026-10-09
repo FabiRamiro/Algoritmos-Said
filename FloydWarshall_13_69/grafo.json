@@ -1,5 +1,5 @@
 {
-  "title": "Bellman–Ford · Grafo confirmado 13 → 69",
+  "title": "Floyd–Warshall · Todos los pares",
   "directed": false,
   "source": 13,
   "target": 69,

@@ -134,14 +134,14 @@ class InterfazTests(unittest.TestCase):
         finally:
             w.reloj.stop(); w.lote_timer.stop(); w.close()
 
-    def test_grafo_entregado_y_evidencias_de_los_seis_ciclos(self):
+    def test_grafo_entregado_y_evidencias_de_los_ocho_ciclos(self):
         g=Grafo.cargar(Path(__file__).with_name('grafo.json'))
         r=bellman_ford(g,g.origen,g.destino)
         self.assertFalse(g.dirigido)
         self.assertEqual(len(r.afectados),30)
         evidencias=[p for p in r.pasos if p.tipo=='verificar_ciclo']
-        self.assertEqual(len(evidencias),12)
-        self.assertEqual(len({p.arista for p in evidencias}),6)
+        self.assertEqual(len(evidencias),16)
+        self.assertEqual(len({p.arista for p in evidencias}),8)
         lienzo=Lienzo(g,r.pasos[0])
         imagen=SesionCapturas(g,r,lienzo.dibujar,self.base).imagen(len(r.pasos)-1)
         self.assertEqual((imagen.width(),imagen.height()),(3200,2000))
