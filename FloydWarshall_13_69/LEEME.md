@@ -30,7 +30,7 @@ y completas en los PNG:
 
 R contiene intermedios, **no predecesores ni siguientes saltos**. La reconstrucción usa
 otra matriz interna, `siguiente`, que además permite conservar la arista correcta cuando
-hay conexiones paralelas. Las celdas que mejoran se destacan en negritas y con fondo claro;
+hay conexiones paralelas. Las celdas que mejoran se destacan en negritas y con fondo verde;
 la fila y la columna de `k` tienen un fondo distinto y borde en la captura.
 
 Se usa orden **numérico** de los identificadores: 0, 1, 2, …, 78, 666. El PDF muestra
@@ -50,11 +50,28 @@ por iteración. Los PNG miden 4400 × 2672 píxeles para este grafo y contienen 
 matrices completas, el grafo, el intermedio, el resumen y la consulta origen-destino.
 Las cifras y matrices también quedan en los metadatos del PNG.
 
-`Capturar iteraciones` guarda al avanzar; saltar al resultado encola las intermedias.
+`Capturar iteraciones` empieza desactivado para navegar sin el costo de dibujar y
+comprimir PNG. Al activarlo, guarda al avanzar; saltar al resultado encola las intermedias.
 `Guardar todos` exporta la sesión completa y permite pausar y continuar. Retroceder
 no duplica imágenes. Cambiar la consulta crea otra carpeta y reutiliza las matrices
 calculadas; editar pesos o abrir un JSON recalcula el algoritmo.
 Las carpetas se crean dentro de `FloydWarshall_13_69/capturas`.
+
+## Guardar en Excel
+
+El botón **Guardar Excel** exporta todas las matrices en un `.xlsx` sin depender
+de las capturas PNG. La hoja **Iteraciones** coloca D a la izquierda y R a la
+derecha, con cada estado debajo del anterior. La hoja **Resultado** contiene las
+matrices finales y la consulta seleccionada. El Excel usa fondo blanco, texto negro
+y encabezados sencillos. Las mejoras se resaltan en verde suave y la fila/columna
+del intermedio en gris claro.
+
+Los costos finitos se guardan como números, no como texto. `∞` significa sin
+camino, `−∞` significa sin mínimo finito por ciclo negativo y `—` significa sin
+recorrido. La diagonal inicial conserva 0, salvo bucles negativos. El archivo
+guarda instantáneas, no fórmulas de recálculo: si cambias pesos, exporta otra vez.
+No requiere Excel instalado ni nuevas dependencias de Python. Para reemplazar
+un archivo abierto en Excel, ciérralo primero.
 
 ## Pesos negativos confirmados
 
@@ -126,6 +143,8 @@ se compara el camino anterior con el que permite usar `k`.
 - `dibujo.py` y `tema.py`: conservan el dibujo y el estilo de los otros programas.
 - `interfaz.py`: controla navegación, consulta de pares, edición de pesos y exportación.
 - `capturas.py`: dibuja imágenes completas, independientes del zoom y desplazamiento.
+- `excel.py`: escribe el libro Excel con las matrices ya calculadas. Usa `zipfile`
+  y `xml.etree.ElementTree`, incluidos en Python, porque un XLSX contiene XML dentro de un ZIP.
 
 ## Pruebas
 

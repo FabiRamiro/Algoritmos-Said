@@ -187,7 +187,7 @@ class Lienzo(QWidget):
         for a in orden:
             path = paths[a.id]
             activo = a.id == paso.arista
-            tinta = GREEN if a.id in ruta else GOLD if activo else "#555a63" if a.id in arbol else "#3c4048"
+            tinta = GREEN if a.id in ruta else GOLD if activo else "#87938c" if a.id in arbol else "#626a76"
             ancho = 4.5 if activo or a.id in ruta else 2 if a.id in arbol else 1.5
             pen = QPen(color(tinta), ancho, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
             if a.dudosa and not activo and a.id not in ruta:
@@ -236,10 +236,10 @@ class Lienzo(QWidget):
                 _, _, box, ancla = min(candidatos, key=lambda item: item[:2])
                 ocupados.append(box.adjusted(-3, -2, 3, 2))
                 if abs(box.center().y()-ancla.y()) > 12:
-                    p.setPen(QPen(color("#3c4048"), 1))
+                    p.setPen(QPen(color("#626a76"), 1))
                     p.drawLine(ancla, box.center())
-                p.setPen(QPen(color("#777d87" if activo else "#292d34"), .8))
-                p.setBrush(color("#2a2d33" if activo else PANEL))
+                p.setPen(QPen(color("#86efac" if activo else "#292d34"), .8))
+                p.setBrush(color("#243e2c" if activo else PANEL))
                 p.drawRoundedRect(box, 4, 4)
                 p.setPen(color(GREEN if a.id in ruta else GOLD if activo or a.dudosa else MUTED))
                 p.drawText(box, Qt.AlignmentFlag.AlignCenter, texto)
@@ -248,8 +248,8 @@ class Lienzo(QWidget):
             tinta = self.estado_color(n, paso)
             actual, vecino = n == paso.actual, n == paso.vecino
             r = max(25, 14/escala)
-            relleno = ("#30343c" if n in paso.ruta else "#393d45" if actual
-                       else "#24272d" if vecino else "#24272d" if n in paso.fijos else PANEL)
+            relleno = ("#173f2b" if n in paso.ruta else "#31532b" if actual
+                       else "#20372c" if vecino else "#20372c" if n in paso.fijos else PANEL)
             if actual or vecino or (not limpio and n == self.elegido):
                 p.setPen(QPen(color(tinta), 1.4, Qt.PenStyle.DashLine if vecino else Qt.PenStyle.SolidLine))
                 p.setBrush(Qt.BrushStyle.NoBrush)
@@ -678,6 +678,10 @@ class Ventana(QMainWindow):
         self.captura_estado = label("", 10, MUTED)
         pie.addWidget(self.captura_estado)
         pie.addStretch()
+        self.automatico = QCheckBox("Capturar al avanzar")
+        self.automatico.setToolTip("Guardar PNG al avanzar puede ralentizar la navegación. También puedes usar Guardar todos al terminar.")
+        self.automatico.toggled.connect(self.cambiar_capturas)
+        pie.addWidget(self.automatico)
 
         pie.addWidget(button("Carpeta PNG", self.abrir_capturas, "quiet"))
         self.todos_btn = button("Guardar todos", self.exportar_todo, "quiet")
@@ -700,6 +704,16 @@ class Ventana(QMainWindow):
             f"Capturas · {len(self.capturas.guardados)} / {len(self.capturas.indices)} guardados"
             + (" · exportando…" if self.lote_timer.isActive() else ""))
         self.captura_estado.setToolTip(str(self.capturas.carpeta))
+
+    def cambiar_capturas(self, activo):
+        if activo:
+            self.error_captura = False
+            self.guardar_paso_actual()
+        else:
+            self.lote_timer.stop()
+            self.lote_pendientes = []
+            self.todos_btn.setText("Guardar todos")
+        self.mostrar_estado_capturas()
 
     def guardar_paso_actual(self):
         if self.error_captura:
@@ -825,7 +839,7 @@ class Ventana(QMainWindow):
         self.cola_nota.setText("Candidatos pendientes; la meta ya está fijada." if paso.tipo in ("fin", "ruta") else "El próximo candidato está arriba.")
         for i, w in enumerate(self.code_lines):
             active = i == paso.linea or (paso.tipo in ("predecesor", "encolar") and i == 8) or (paso.tipo == "fijar" and paso.actual == destino and i == 3)
-            w.setStyleSheet(f"font: 10px 'Consolas'; padding: 5px 4px; border-radius: 5px; background: {'#30343d' if active else 'transparent'}; color: {CYAN if active else MUTED};")
+            w.setStyleSheet(f"font: 10px 'Consolas'; padding: 5px 4px; border-radius: 5px; background: {'#24543a' if active else 'transparent'}; color: {CYAN if active else MUTED};")
         if paso.tipo == "fin":
             self.ruta_label.setText("   →   ".join(map(str, paso.ruta)))
             self.ruta_label.setStyleSheet(f"font-size: 19px; font-weight: 600; color: {GREEN};")
@@ -848,10 +862,12 @@ class Ventana(QMainWindow):
         self.historial.setCurrentRow(self.indice)
         self.historial.scrollToItem(self.historial.currentItem(), QAbstractItemView.ScrollHint.PositionAtCenter)
         self.historial.blockSignals(False)
-        self.guardar_paso_actual()
+        if self.automatico.isChecked():
+            self.guardar_paso_actual()
+        self.mostrar_estado_capturas()
         # Saltar con la barra, por nodo o al resultado tampoco pierde evidencias.
         # Solo las decisiones seleccionadas se guardan, sin mover la pantalla.
-        if self.indice > anterior + 1 and not self.error_captura:
+        if self.automatico.isChecked() and self.indice > anterior + 1 and not self.error_captura:
             pendientes = set(self.lote_pendientes)
             pendientes.update(i for i in self.capturas.indices
                               if anterior < i < self.indice and i not in self.capturas.guardados)

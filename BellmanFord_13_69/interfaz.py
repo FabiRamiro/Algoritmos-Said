@@ -46,7 +46,7 @@ def tabla(cabeceras):
 
 
 class Ventana(QMainWindow):
-    def __init__(self,ruta=None,capturar=True,carpeta_capturas=None):
+    def __init__(self,ruta=None,capturar=False,carpeta_capturas=None):
         super().__init__()
         self.grafo=Grafo.cargar(ruta or BASE/'grafo.json')
         self.recorrido=bellman_ford(self.grafo,self.grafo.origen,self.grafo.destino)
@@ -218,7 +218,7 @@ class Ventana(QMainWindow):
         root.addLayout(fila)
         fila=QHBoxLayout()
         self.automatico=QCheckBox('Capturar pasos del PDF'); self.automatico.setChecked(capturar)
-        self.automatico.setToolTip('Una captura si NO mejora; antes y después si SÍ mejora. Control final resumido.')
+        self.automatico.setToolTip('Guardar PNG al avanzar puede ralentizar la navegación. También puedes usar Guardar todos al terminar.')
         self.automatico.toggled.connect(self.cambiar_capturas); fila.addWidget(self.automatico)
         self.estado_capturas=label('',10,MUTED); fila.addWidget(self.estado_capturas,1)
         fila.addWidget(boton('Carpeta PNG',self.abrir_capturas,'quiet'))
@@ -278,7 +278,7 @@ class Ventana(QMainWindow):
             for row,valor in enumerate([str(n),numero(p.distancias[n]),str(prev) if prev is not None else '—']):
                 item=QTableWidgetItem(valor); item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 item.setForeground(QColor(INK if n in (p.actual,p.vecino) else MUTED))
-                if n==p.vecino: item.setBackground(QColor('#343942'))
+                if n==p.vecino: item.setBackground(QColor('#24543a'))
                 self.vector.setItem(row,col,item)
         if p.vecino in self.nodos:
             self.vector.scrollToItem(self.vector.item(1,self.nodos.index(p.vecino)))

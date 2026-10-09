@@ -103,7 +103,19 @@ Dijkstra, Bellman-Ford y A* permiten además ver la fotografía original del gra
 
 ## Capturas
 
-Mientras se avanza por un recorrido, los pasos importantes se guardan como imágenes PNG en la carpeta `capturas/` del proyecto correspondiente, dentro de una subcarpeta con la fecha, la hora, el origen y el destino. Cada imagen contiene el grafo completo y una explicación del paso. No incluye los controles de la ventana ni depende del zoom. El botón **Guardar todos** genera la secuencia completa de una sola vez.
+La captura automática empieza **desactivada** para que navegar y reproducir no tenga que dibujar y comprimir un PNG de alta resolución en cada paso. Puedes activarla con **Capturar al avanzar**, **Capturar pasos del PDF** o **Capturar iteraciones**, según el algoritmo. El botón **Guardar todos** sigue generando la secuencia completa aunque no hayas activado la captura automática.
+
+Las imágenes se guardan en la carpeta `capturas/` del proyecto correspondiente, dentro de una subcarpeta con la fecha, la hora, el origen y el destino. Cada imagen contiene el grafo completo y una explicación del paso. No incluye los controles de la ventana ni depende del zoom. La exportación de imágenes puede tardar; desactivar la captura automática evita ese trabajo durante la navegación.
+
+## Excel de Floyd–Warshall
+
+Abre Floyd–Warshall y pulsa **Guardar Excel**, en la parte inferior. Elige dónde guardar el `.xlsx`. Funciona también desde el proyecto individual y no necesita Excel instalado ni bibliotecas adicionales.
+
+- **Iteraciones:** matrices D y R lado a lado, con inicialización, cada intermedio y control final colocados hacia abajo, como en la referencia.
+- **Resultado:** matrices finales y la consulta origen-destino elegida.
+- Formato sencillo: fondo blanco, texto negro y encabezados en negrita. Verde suave indica una mejora; gris claro marca la fila y columna del intermedio. Los encabezados mantienen los identificadores reales de los nodos.
+
+Se exportan valores numéricos y los símbolos `∞`, `−∞` y `—`, conservando los decimales. Son instantáneas del cálculo: para cambiar pesos y recalcular, utiliza el programa y exporta de nuevo. **Guardar Excel** incluye todos los pasos sin generar imágenes primero ni depender de la iteración visible. Si el archivo está abierto en Excel, ciérralo antes de reemplazarlo.
 
 ## Diapositivas
 

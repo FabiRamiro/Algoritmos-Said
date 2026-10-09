@@ -5,7 +5,7 @@ import json
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QImage, QPainter, QColor, QPen, QFont
 from algoritmo import numero
-from tema import BG, PANEL, LINE, INK, MUTED
+from tema import BG, PANEL, LINE, INK, MUTED, GREEN
 
 
 class SesionCapturas:
@@ -73,8 +73,8 @@ class SesionCapturas:
                     cabecera = fila==0 or col==0
                     activo = not cabecera and (nodos[fila-1]==paso.k or nodos[col-1]==paso.k)
                     cambio = not cabecera and (fila-1,col-1) in cambiados
-                    p.fillRect(QRectF(xx,yy,celda,36),QColor('#393d45' if cambio else '#24272d' if activo or cabecera else PANEL))
-                    p.setPen(QPen(QColor('#727782' if activo else LINE),1))
+                    p.fillRect(QRectF(xx,yy,celda,36),QColor('#31532b' if cambio else '#20372c' if activo or cabecera else PANEL))
+                    p.setPen(QPen(QColor('#86efac' if activo else LINE),1))
                     p.drawRect(QRectF(xx,yy,celda,36))
                     if fila==0:
                         valor = 'i / j' if col==0 else str(nodos[col-1])
@@ -87,7 +87,7 @@ class SesionCapturas:
                     p.setFont(f)
                     while p.fontMetrics().horizontalAdvance(valor)>celda-6 and f.pixelSize()>9:
                         f.setPixelSize(f.pixelSize()-1); p.setFont(f)
-                    p.setPen(QColor(INK if cabecera or cambio else MUTED))
+                    p.setPen(QColor(GREEN if cambio else INK if cabecera else MUTED))
                     p.drawText(QRectF(xx+2,yy,celda-4,36),Qt.AlignmentFlag.AlignCenter,valor)
 
         try:

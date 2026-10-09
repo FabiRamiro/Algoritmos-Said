@@ -11,7 +11,8 @@ from PySide6.QtWidgets import (QApplication,QMainWindow,QWidget,QVBoxLayout,QHBo
 from algoritmo import Grafo, floyd_warshall, numero
 from dibujo import Lienzo
 from capturas import SesionCapturas
-from tema import STYLE, INK, MUTED, aplicar_paleta
+from excel import guardar_excel
+from tema import STYLE, INK, MUTED, PANEL, aplicar_paleta
 
 BASE = Path(__file__).resolve().parent
 
@@ -28,7 +29,7 @@ def boton(texto, accion):
 
 
 class Ventana(QMainWindow):
-    def __init__(self, ruta=None, capturar=True, carpeta_capturas=None):
+    def __init__(self, ruta=None, capturar=False, carpeta_capturas=None):
         super().__init__()
         self.grafo = Grafo.cargar(ruta or BASE/'grafo.json')
         self.recorrido = floyd_warshall(self.grafo)
@@ -106,7 +107,12 @@ class Ventana(QMainWindow):
         fila.addStretch(); fila.addWidget(boton('Guardar PNG actual',self.guardar_png))
         self.todos = boton('Guardar todos',self.exportar_todo); fila.addWidget(self.todos)
         fila.addWidget(boton('Carpeta PNG',self.abrir_capturas)); root.addLayout(fila)
-        self.estado = label('',11); root.addWidget(self.estado)
+        pie = QHBoxLayout()
+        self.estado = label('',11); pie.addWidget(self.estado,1)
+        self.excel_btn = boton('Guardar Excel',self.exportar_excel)
+        self.excel_btn.setToolTip('Todas las iteraciones: matrices D y R lado a lado, más el resultado. No requiere PNG.')
+        pie.addWidget(self.excel_btn); root.addLayout(pie)
+        self.automatico.setToolTip('Guardar PNG al avanzar puede ralentizar la navegación. También puedes usar Guardar todos al terminar.')
         self.reloj = QTimer(self); self.reloj.timeout.connect(self.avanzar)
         self.lote_timer = QTimer(self); self.lote_timer.timeout.connect(self.procesar_captura)
         self.llenar_selectores()
@@ -137,6 +143,13 @@ class Ventana(QMainWindow):
             tabla.setVerticalHeaderLabels(list(map(str,nodos)))
             tabla.horizontalHeader().setDefaultSectionSize(78)
             tabla.verticalHeader().setDefaultSectionSize(28)
+            # Reutilizar las celdas evita crear y destruir dos matrices en cada paso.
+            for i in range(len(nodos)):
+                for j in range(len(nodos)):
+                    if tabla.item(i,j) is None:
+                        item=QTableWidgetItem()
+                        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                        tabla.setItem(i,j,item)
         self.historial.blockSignals(True); self.historial.clear()
         self.historial.addItems([f'{i+1:02d} · {p.titulo}' for i,p in enumerate(self.recorrido.pasos)])
         self.historial.blockSignals(False)
@@ -156,16 +169,19 @@ class Ventana(QMainWindow):
         modificados={(c.i,c.j) for c in paso.cambios}
         for tabla,matriz,dist in [(self.tabla_d,paso.distancias,True),(self.tabla_r,paso.recorridos,False)]:
             tabla.setUpdatesEnabled(False)
+            tabla.blockSignals(True)
             for i,fila in enumerate(matriz):
                 for j,v in enumerate(fila):
                     valor=numero(v) if dist else '—' if v is None else str(v)
-                    item=QTableWidgetItem(valor); item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    item=tabla.item(i,j)
+                    if item.text()!=valor: item.setText(valor)
                     f=item.font(); f.setBold((i,j) in modificados); item.setFont(f)
                     item.setForeground(QColor(INK if (i,j) in modificados else MUTED))
-                    if (i,j) in modificados: item.setBackground(QColor('#393d45'))
-                    elif paso.k in (nodos[i],nodos[j]): item.setBackground(QColor('#24272d'))
+                    if (i,j) in modificados: item.setBackground(QColor('#31532b'))
+                    elif paso.k in (nodos[i],nodos[j]): item.setBackground(QColor('#20372c'))
+                    else: item.setBackground(QColor(PANEL))
                     item.setToolTip(f'{nodos[i]} → {nodos[j]}: {valor}')
-                    tabla.setItem(i,j,item)
+            tabla.blockSignals(False)
             tabla.setUpdatesEnabled(True)
             if paso.k is not None:
                 k=nodos.index(paso.k)
@@ -267,6 +283,24 @@ class Ventana(QMainWindow):
         ruta,_=QFileDialog.getSaveFileName(self,'Guardar captura',self.capturas.nombre(self.indice),'PNG (*.png)')
         if ruta and not self.capturas.imagen(self.indice).save(ruta,'PNG'):
             QMessageBox.warning(self,'No se pudo guardar','Revisa los permisos y el espacio disponible.')
+
+    def exportar_excel(self):
+        self.pausar()
+        ruta,_=QFileDialog.getSaveFileName(self,'Guardar matrices de Floyd–Warshall',
+                                          str(BASE/'floyd_warshall.xlsx'),'Excel (*.xlsx)')
+        if not ruta: return
+        destino=Path(ruta)
+        if destino.suffix.lower()!='.xlsx': destino=destino.with_suffix('.xlsx')
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            guardar_excel(self.recorrido,destino,self.origen.currentData(),self.destino.currentData())
+        except (OSError,ValueError) as exc:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(self,'No se pudo guardar Excel',
+                                f'{exc}\n\nSi el archivo está abierto en Excel, ciérralo y vuelve a intentarlo.')
+            return
+        QApplication.restoreOverrideCursor()
+        QMessageBox.information(self,'Excel guardado',f'Se guardaron todas las iteraciones y el resultado en:\n{destino}')
 
     def cargar_grafo(self,grafo):
         self.grafo=grafo; self.recorrido=floyd_warshall(grafo)

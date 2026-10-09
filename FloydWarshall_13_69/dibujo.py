@@ -124,7 +124,7 @@ class Lienzo(QWidget):
         for a in orden:
             path = paths[a.id]
             activo = a.id == paso.arista
-            tinta = GREEN if a.id in ruta else GOLD if activo else "#555a63" if a.id in arbol else "#3c4048"
+            tinta = GREEN if a.id in ruta else GOLD if activo else "#87938c" if a.id in arbol else "#626a76"
             ancho = 4.5 if activo or a.id in ruta else 2 if a.id in arbol else 1.5
             pen = QPen(color(tinta), ancho, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
             p.setBrush(Qt.BrushStyle.NoBrush)
@@ -168,10 +168,10 @@ class Lienzo(QWidget):
                 _, _, box, ancla = min(candidatos, key=lambda item: item[:2])
                 ocupados.append(box.adjusted(-3, -2, 3, 2))
                 if abs(box.center().y()-ancla.y()) > 12:
-                    p.setPen(QPen(color("#3c4048"), 1))
+                    p.setPen(QPen(color("#626a76"), 1))
                     p.drawLine(ancla, box.center())
-                p.setPen(QPen(color("#777d87" if activo else "#292d34"), .8))
-                p.setBrush(color("#2a2d33" if activo else PANEL))
+                p.setPen(QPen(color("#86efac" if activo else "#292d34"), .8))
+                p.setBrush(color("#243e2c" if activo else PANEL))
                 p.drawRoundedRect(box, 4, 4)
                 p.setPen(color(GREEN if a.id in ruta else GOLD if activo else MUTED))
                 p.drawText(box, Qt.AlignmentFlag.AlignCenter, texto)
@@ -180,8 +180,8 @@ class Lienzo(QWidget):
             tinta = self.estado_color(n, paso)
             actual, vecino = n == paso.actual, n == paso.vecino
             r = max(25, 14/escala)
-            relleno = ("#30343c" if n in paso.ruta else "#393d45" if actual
-                       else "#24272d" if vecino else "#1c1e23" if paso.distancias[n] < inf else PANEL)
+            relleno = ("#173f2b" if n in paso.ruta else "#31532b" if actual
+                       else "#20372c" if vecino else "#1c1e23" if paso.distancias[n] < inf else PANEL)
             if actual or vecino or (not limpio and n == self.elegido):
                 p.setPen(QPen(color(tinta), 1.4, Qt.PenStyle.DashLine if vecino else Qt.PenStyle.SolidLine))
                 p.setBrush(Qt.BrushStyle.NoBrush)

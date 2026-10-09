@@ -27,9 +27,9 @@ BG, PANEL, LINE, INK, MUTED = tema.BG, tema.PANEL, tema.LINE, tema.INK, tema.MUT
 ESTILO = tema.STYLE + f"""
 QPushButton#nav {{ background: transparent; border: none; color: {MUTED}; padding: 7px 14px; font-size: 12px; }}
 QPushButton#nav:hover {{ background: #1c1e22; color: {INK}; }}
-QPushButton#nav:checked {{ background: #2a2d33; color: {INK}; font-weight: 600; }}
+QPushButton#nav:checked {{ background: #193c2a; color: {tema.GREEN}; font-weight: 600; }}
 QFrame#opcion {{ background: {PANEL}; border: 1px solid {LINE}; border-radius: 10px; }}
-QFrame#opcion:hover {{ border-color: #626670; background: #16171a; }}
+QFrame#opcion:hover {{ border-color: {tema.GREEN}; background: #16171a; }}
 """
 
 
@@ -298,7 +298,7 @@ class Laboratorio(QMainWindow):
                 QMessageBox.information(
                     self, "Crear diapositivas",
                     f"Esta sesión tiene {total} pasos para capturar, demasiados para una presentación.\n\n"
-                    "Avanza por los pasos que quieras mostrar (se guardan al recorrerlos) y vuelve a pulsar el botón.")
+                    "Activa la captura automática, avanza por los pasos que quieras mostrar y vuelve a pulsar el botón.")
                 return
             if guardadas > diapositivas.LIMITE and QMessageBox.question(
                     self, "Crear diapositivas",

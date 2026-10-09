@@ -8,7 +8,7 @@ import json
 from PySide6.QtCore import Qt,QRectF
 from PySide6.QtGui import QImage,QPainter,QColor,QPen,QFont
 from algoritmo import numero
-from tema import BG,PANEL,LINE,INK,MUTED
+from tema import BG,PANEL,LINE,INK,MUTED,GREEN
 
 
 class SesionCapturas:
@@ -113,11 +113,11 @@ class SesionCapturas:
                 x=2212+col*ancho_col; y=220+fila*26
                 activo=k==paso.indice_arco
                 if activo:
-                    p.fillRect(QRectF(x-3,y,304,26),QColor('#363b44'))
-                    p.fillRect(QRectF(x-3,y,3,26),QColor('#d9dde5'))
+                    p.fillRect(QRectF(x-3,y,304,26),QColor('#24543a'))
+                    p.fillRect(QRectF(x-3,y,3,26),QColor('#4ade80'))
                 marca='›' if activo else ' '
                 texto(x+4,y,296,26,f'{marca}{k+1:03d}  ({a.u}, {a.v})  w={numero(a.peso)}  {a.arista}',
-                      16,INK if activo else MUTED,activo)
+                      16,GREEN if activo else MUTED,activo)
 
             panel(32,inferior,1560,alto_inferior)
             texto(56,inferior+18,1500,40,'ARREGLOS  /  ESTADO DE ESTE PASO',24,INK,True)
@@ -131,7 +131,7 @@ class SesionCapturas:
                         x=142+col*95
                         activo=n==paso.vecino
                         if activo:
-                            p.fillRect(QRectF(x,yy+fila*42,91,40),QColor('#30353e'))
+                            p.fillRect(QRectF(x,yy+fila*42,91,40),QColor('#24543a'))
                         previo=paso.anteriores.get(n,(None,))[0]
                         valor=str(n) if fila==0 else numero(paso.distancias[n]) if fila==1 else str(previo) if previo is not None else '—'
                         # Las cifras extensas se reducen, nunca se sustituyen por puntos.
@@ -147,7 +147,7 @@ class SesionCapturas:
             texto(1640,inferior+113,1490,51,paso.pregunta,30,INK,True)
             texto(1640,inferior+168,1490,61,paso.comparacion,24,MUTED)
             texto(1640,inferior+234,290,32,'RESPUESTA',17,MUTED,True)
-            texto(1970,inferior+224,1138,55,paso.respuesta,30,INK,True)
+            texto(1970,inferior+224,1138,55,paso.respuesta,30,GREEN,True)
             texto(1640,inferior+296,1490,27,'PROCESO',17,MUTED,True)
             texto(1640,inferior+333,1490,102,paso.proceso,27,INK,True)
             texto(1640,inferior+447,1490,alto_inferior-467,paso.texto,23,MUTED)

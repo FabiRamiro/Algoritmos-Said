@@ -6,7 +6,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QColor, QImage, QPainter, QFont, QPen
 
-from tema import BG, PANEL, LINE, INK, MUTED
+from tema import BG, PANEL, LINE, INK, MUTED, GREEN
 from algoritmo import numero
 
 
@@ -134,4 +134,4 @@ class SesionCapturas:
         if paso.formula:
             painter.setPen(QPen(QColor(LINE), 1))
             painter.drawLine(1420, 1044, 1420, 1200)
-            texto(QRectF(1450, 1050, 425, 146), paso.formula, 24, INK, True)
+            texto(QRectF(1450, 1050, 425, 146), paso.formula, 24, GREEN, True)

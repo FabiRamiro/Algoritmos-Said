@@ -102,6 +102,7 @@ class CapturaTests(unittest.TestCase):
         with patch("interfaz.SesionCapturas",side_effect=crear), patch("interfaz.Grafo.cargar",return_value=self.g):
             w = Ventana()
             self.addCleanup(w.close)
+            w.automatico.setChecked(True)
             w.resultado()
             w.lote_timer.stop()
             while w.lote_pendientes:
