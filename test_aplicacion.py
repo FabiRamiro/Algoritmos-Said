@@ -137,6 +137,61 @@ class LaboratorioTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.w.mostrar("prim")
 
+    def test_boton_de_diapositivas_solo_con_un_algoritmo_abierto(self):
+        self.assertFalse(self.w.diapositivas_btn.isEnabled())
+        self.w.mostrar("astar")
+        self.assertTrue(self.w.diapositivas_btn.isEnabled())
+        self.w.mostrar("inicio")
+        self.assertFalse(self.w.diapositivas_btn.isEnabled())
+
+    def test_crear_diapositivas_completa_la_sesion(self):
+        self.w.mostrar("astar")
+        vista = self.w.vistas["astar"]
+        vista.mover(1); vista.mover(1); vista.mover(1)  # Llega a la primera decisión.
+        self.assertTrue(self.w.capturas_faltantes(vista))
+        Si = aplicacion.QMessageBox.StandardButton.Yes
+        with patch.object(aplicacion.QMessageBox, "question", return_value=Si) as pregunta, \
+             patch.object(aplicacion.QMessageBox, "exec", return_value=0):
+            self.w.crear_diapositivas()
+        pregunta.assert_called_once()
+        self.assertEqual(self.w.capturas_faltantes(vista), [])
+        carpeta = vista.capturas.carpeta
+        self.assertEqual(len(list(carpeta.glob("captura_*.png"))), len(vista.capturas.indices))
+        self.assertTrue((carpeta / "diapositivas.pdf").exists())
+        self.assertTrue((carpeta / "diapositivas.pptx").exists())
+        self.assertFalse(vista.lote_timer.isActive())
+
+    def test_sesion_enorme_usa_solo_las_capturas_recorridas(self):
+        self.w.mostrar("bellman-ford")
+        vista = self.w.vistas["bellman-ford"]
+        self.assertGreater(len(self.w.capturas_faltantes(vista)), aplicacion.diapositivas.LIMITE)
+        carpeta = vista.capturas.carpeta
+        recorridas = len(list(carpeta.glob("captura_*.png")))  # La vista guarda su primer paso al abrirse.
+        self.assertGreater(recorridas, 0)
+        with patch.object(aplicacion.QMessageBox, "question") as pregunta, \
+             patch.object(aplicacion.QMessageBox, "exec", return_value=0):
+            self.w.crear_diapositivas()
+        pregunta.assert_not_called()  # No ofrece guardar miles de capturas.
+        self.assertEqual(len(list(carpeta.glob("captura_*.png"))), recorridas)
+        self.assertTrue((carpeta / "diapositivas.pdf").exists())
+        # Sin ninguna captura recorrida, solo explica qué hacer.
+        for png in carpeta.glob("captura_*.png"):
+            png.unlink()
+        (carpeta / "diapositivas.pdf").unlink()
+        with patch.object(aplicacion.QMessageBox, "information") as aviso:
+            self.w.crear_diapositivas()
+        aviso.assert_called_once()
+        self.assertFalse((carpeta / "diapositivas.pdf").exists())
+
+    def test_cancelar_no_crea_nada(self):
+        self.w.mostrar("dijkstra")
+        vista = self.w.vistas["dijkstra"]
+        Cancelar = aplicacion.QMessageBox.StandardButton.Cancel
+        with patch.object(aplicacion.QMessageBox, "question", return_value=Cancelar):
+            self.w.crear_diapositivas()
+        self.assertFalse((vista.capturas.carpeta / "diapositivas.pdf").exists())
+        self.assertEqual(vista.capturas.guardados, set())
+
     def test_inicial_desde_la_linea_de_comandos(self):
         w = Laboratorio("floyd-warshall")
         self.addCleanup(w.close)

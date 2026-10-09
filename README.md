@@ -40,6 +40,7 @@ Con la versión de pesos negativos, Bellman-Ford y Floyd-Warshall informan que *
 
 - Python 3 (desarrollado y probado con Python 3.14).
 - PySide6 6.10.2.
+- python-pptx 1.0.2, solo para crear presentaciones de PowerPoint. Sin esta biblioteca, las diapositivas se generan únicamente en PDF.
 
 ```bash
 python -m pip install -r requirements.txt
@@ -104,6 +105,25 @@ Dijkstra, Bellman-Ford y A* permiten además ver la fotografía original del gra
 
 Mientras se avanza por un recorrido, los pasos importantes se guardan como imágenes PNG en la carpeta `capturas/` del proyecto correspondiente, dentro de una subcarpeta con la fecha, la hora, el origen y el destino. Cada imagen contiene el grafo completo y una explicación del paso. No incluye los controles de la ventana ni depende del zoom. El botón **Guardar todos** genera la secuencia completa de una sola vez.
 
+## Diapositivas
+
+Las capturas de una sesión se pueden convertir en una presentación, con una diapositiva por captura y en el mismo orden. Se generan dos archivos dentro de la carpeta de la sesión:
+
+- `diapositivas.pdf`, que se puede presentar en pantalla completa desde cualquier lector de PDF.
+- `diapositivas.pptx`, que se puede editar en PowerPoint. Las notas del orador de cada diapositiva contienen la explicación del paso.
+
+El tamaño de las diapositivas sigue la proporción de las capturas, así que las imágenes ocupan toda la página.
+
+En la aplicación unificada, el botón **Crear diapositivas** de la barra superior convierte la sesión del algoritmo abierto. Si faltan capturas, ofrece guardarlas primero para que la presentación muestre el recorrido completo. Cuando una sesión tiene más de 300 pasos para capturar, como Bellman-Ford sobre el grafo con pesos negativos (más de 5000), solo se usan las capturas de los pasos que ya se recorrieron.
+
+También se puede convertir cualquier carpeta de capturas desde la terminal:
+
+```bash
+python diapositivas.py AStar_13_69/capturas/<carpeta de la sesión>
+```
+
+La opción `--formato pdf` o `--formato pptx` genera solo uno de los dos archivos.
+
 ## Estructura del repositorio
 
 ```text
@@ -111,7 +131,9 @@ Mientras se avanza por un recorrido, los pasos importantes se guardan como imág
 ├── main.py              Punto de entrada de la aplicación unificada
 ├── aplicacion.py        Ventana principal y navegación entre algoritmos
 ├── cargador.py          Importa cada proyecto sin que sus módulos se mezclen
+├── diapositivas.py      Convierte una carpeta de capturas en PDF y PowerPoint
 ├── test_aplicacion.py   Pruebas de la aplicación unificada
+├── test_diapositivas.py Pruebas del generador de diapositivas
 ├── Dijkstra_13_69/
 ├── BellmanFord_13_69/
 ├── FloydWarshall_13_69/
@@ -137,10 +159,10 @@ cd AStar_13_69
 python -m unittest -v
 ```
 
-Las pruebas de la aplicación unificada se ejecutan desde la raíz con el mismo comando. En total hay 98 pruebas. Entre otras cosas, comprueban que:
+Las pruebas de la aplicación unificada y del generador de diapositivas se ejecutan desde la raíz con el mismo comando. En total hay 109 pruebas. Entre otras cosas, comprueban que:
 
 - Los costos coinciden con los de un algoritmo de referencia independiente.
 - La heurística de A* es admisible y consistente.
 - Los ciclos negativos se detectan.
 - Los estados guardados en cada paso son independientes entre sí.
-- Las capturas se generan correctamente.
+- Las capturas y las diapositivas se generan correctamente.

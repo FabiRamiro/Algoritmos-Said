@@ -11,13 +11,14 @@ from dataclasses import dataclass
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QFrame, QGridLayout,
-    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QStackedWidget,
-    QVBoxLayout, QWidget)
+    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressDialog, QPushButton,
+    QStackedWidget, QVBoxLayout, QWidget)
 
 from cargador import importar_aislado
+import diapositivas
 
 RAIZ = Path(__file__).resolve().parent
 tema = importar_aislado(RAIZ / "Dijkstra_13_69", "tema", "tema_comun")
@@ -164,6 +165,12 @@ class Laboratorio(QMainWindow):
             self.grupo.addButton(b)
             self.botones[clave] = b
             h.addWidget(b)
+        h.addSpacing(14)
+        self.diapositivas_btn = QPushButton("Crear diapositivas")
+        self.diapositivas_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.diapositivas_btn.setToolTip("PDF y PowerPoint con las capturas del algoritmo abierto")
+        self.diapositivas_btn.clicked.connect(self.crear_diapositivas)
+        h.addWidget(self.diapositivas_btn)
         return barra
 
     def construir_inicio(self):
@@ -244,7 +251,96 @@ class Laboratorio(QMainWindow):
         self.actual = clave
         self.pila.setCurrentWidget(destino)
         self.botones[clave].setChecked(True)
+        self.diapositivas_btn.setEnabled(clave != "inicio")
         self.actualizar_titulo(clave)
+
+    def capturas_faltantes(self, vista):
+        """Pasos de la sesión que se capturarían con «Guardar todos» y aún no tienen PNG."""
+        sesion = vista.capturas
+        esperadas = getattr(sesion, "indices", range(len(vista.recorrido.pasos)))
+        return [i for i in esperadas if i not in sesion.guardados]
+
+    def completar_capturas(self, vista, faltan):
+        # Se detiene la exportación de la vista para no guardar dos veces lo mismo.
+        vista.lote_timer.stop()
+        vista.lote_pendientes = []
+        progreso = QProgressDialog("Guardando capturas…", "Cancelar", 0, len(faltan), self)
+        progreso.setWindowTitle("Crear diapositivas")
+        progreso.setWindowModality(Qt.WindowModality.WindowModal)
+        progreso.setMinimumDuration(300)
+        try:
+            for n, indice in enumerate(faltan):
+                if progreso.wasCanceled():
+                    return False
+                progreso.setValue(n)
+                vista.capturas.guardar(indice)
+                QApplication.processEvents()
+        finally:
+            progreso.setValue(len(faltan))
+            # Cada proyecto llama distinto a su contador de capturas.
+            for nombre in ("mostrar_estado_capturas", "estado_guardado"):
+                if hasattr(vista, nombre):
+                    getattr(vista, nombre)()
+        return True
+
+    def crear_diapositivas(self):
+        vista = self.vistas.get(self.actual)
+        if vista is None:
+            return
+        vista.pausar()
+        faltan = self.capturas_faltantes(vista)
+        guardadas = len(diapositivas.capturas_de(vista.capturas.carpeta))
+        total = len(faltan) + len(vista.capturas.guardados)
+        if total > diapositivas.LIMITE:
+            # Bellman-Ford con ciclos negativos supera las 5000 capturas: completarla
+            # tardaría mucho y produciría archivos de varios GB.
+            if guardadas == 0:
+                QMessageBox.information(
+                    self, "Crear diapositivas",
+                    f"Esta sesión tiene {total} pasos para capturar, demasiados para una presentación.\n\n"
+                    "Avanza por los pasos que quieras mostrar (se guardan al recorrerlos) y vuelve a pulsar el botón.")
+                return
+            if guardadas > diapositivas.LIMITE and QMessageBox.question(
+                    self, "Crear diapositivas",
+                    f"Hay {guardadas} capturas guardadas. La presentación será muy grande.\n\n¿Crearla de todos modos?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+                return
+            faltan = []  # Solo las capturas de los pasos recorridos.
+        if faltan:
+            respuesta = QMessageBox.question(
+                self, "Crear diapositivas",
+                f"Esta sesión tiene {total - len(faltan)} de {total} capturas guardadas.\n\n"
+                "¿Guardar las que faltan para que la presentación muestre el recorrido completo?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Yes)
+            if respuesta == QMessageBox.StandardButton.Cancel:
+                return
+            try:
+                if respuesta == QMessageBox.StandardButton.Yes and not self.completar_capturas(vista, faltan):
+                    return
+            except (OSError, ValueError) as exc:
+                QMessageBox.warning(self, "No se pudieron guardar las capturas", str(exc))
+                return
+        formatos = ("pdf", "pptx") if diapositivas.pptx_disponible() else ("pdf",)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            creados = diapositivas.crear_diapositivas(vista.capturas.carpeta, formatos)
+        except (OSError, ValueError) as exc:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(self, "No se pudieron crear las diapositivas", str(exc))
+            return
+        QApplication.restoreOverrideCursor()
+        mensaje = (f"Se crearon {len(diapositivas.capturas_de(vista.capturas.carpeta))} diapositivas en:\n\n"
+                   + "\n".join(p.name for p in creados) + f"\n\nCarpeta: {vista.capturas.carpeta}")
+        if "pptx" not in formatos:
+            mensaje += "\n\nPara crear también el PowerPoint instala python-pptx:\npython -m pip install -r requirements.txt"
+        caja = QMessageBox(QMessageBox.Icon.Information, "Diapositivas creadas", mensaje,
+                           QMessageBox.StandardButton.Close, self)
+        abrir = caja.addButton("Abrir carpeta", QMessageBox.ButtonRole.ActionRole)
+        caja.exec()
+        if caja.clickedButton() is abrir:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(vista.capturas.carpeta)))
 
     def actualizar_titulo(self, clave):
         if clave != self.actual:
