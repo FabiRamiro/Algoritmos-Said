@@ -1,6 +1,12 @@
 """Explorador oscuro de Bellman–Ford: cada estado se puede revisar y exportar."""
 from dataclasses import replace
 from pathlib import Path
+import sys
+
+# Permite usar la pantalla compartida al ejecutar este proyecto por separado.
+if str(Path(__file__).resolve().parent.parent) not in sys.path:
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+from pantalla_carga import TemporizadorCapturas
 import json
 import time
 
@@ -73,8 +79,7 @@ class Ventana(QMainWindow):
         self.divisor.setStretchFactor(0,1)
         self.divisor.setStretchFactor(1,0)
         self.controles(root,capturar)
-        self.lote_timer=QTimer(self)
-        self.lote_timer.timeout.connect(self.procesar_captura)
+        self.lote_timer=TemporizadorCapturas(self)
         self.reloj=QTimer(self)
         self.reloj.setInterval(35)
         self.reloj.timeout.connect(self.tick)
@@ -398,7 +403,7 @@ class Ventana(QMainWindow):
         menu.addAction('Guardar todos los pasos',self.exportar_todo)
         menu.addAction('Abrir grafo JSON',self.abrir_json)
         menu.addAction('Guardar grafo JSON',self.guardar_json)
-        menu.addAction('Ver fotografía original',self.ver_foto)
+        menu.addAction('Ver fotografía inicial (no dirigida)',self.ver_foto)
         menu.exec(self.archivos_btn.mapToGlobal(self.archivos_btn.rect().bottomLeft()))
 
     def guardar_png(self):
@@ -448,7 +453,7 @@ class Ventana(QMainWindow):
             self.recalcular()
 
     def ver_foto(self):
-        dialog=QDialog(self); dialog.setWindowTitle('Grafo original'); dialog.resize(1050,750)
+        dialog=QDialog(self); dialog.setWindowTitle('Fotografía inicial · anterior al grafo dirigido'); dialog.resize(1050,750)
         v=QVBoxLayout(dialog); scroll=QScrollArea(); img=QLabel(); img.setPixmap(QPixmap(str(BASE/'grafo_original.jpeg')))
         scroll.setWidget(img); v.addWidget(scroll); dialog.exec()
 

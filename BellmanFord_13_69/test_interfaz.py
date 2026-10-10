@@ -134,19 +134,24 @@ class InterfazTests(unittest.TestCase):
         finally:
             w.reloj.stop(); w.lote_timer.stop(); w.close()
 
-    def test_grafo_entregado_y_evidencias_de_los_ocho_ciclos(self):
+    def test_grafo_dirigido_entregado_no_tiene_ciclo_negativo(self):
         g=Grafo.cargar(Path(__file__).with_name('grafo.json'))
         r=bellman_ford(g,g.origen,g.destino)
-        self.assertFalse(g.dirigido)
-        self.assertEqual(len(r.afectados),30)
+        self.assertTrue(g.dirigido)
+        self.assertFalse(r.afectados)
+        self.assertEqual(r.ruta,[13,16,17,69])
+        self.assertEqual(r.costo,14)
+        self.assertIn(18,g.posiciones)
+        self.assertNotIn(78,g.posiciones)
+        self.assertEqual({(a.u,a.v) for a in g.arcos if a.peso==3 and {a.u,a.v}=={12,16}},
+                         {(12,16),(16,12)})
         evidencias=[p for p in r.pasos if p.tipo=='verificar_ciclo']
-        self.assertEqual(len(evidencias),16)
-        self.assertEqual(len({p.arista for p in evidencias}),8)
+        self.assertEqual(len(evidencias),0)
         lienzo=Lienzo(g,r.pasos[0])
         imagen=SesionCapturas(g,r,lienzo.dibujar,self.base).imagen(len(r.pasos)-1)
         self.assertEqual((imagen.width(),imagen.height()),(3200,2000))
         self.assertEqual(len(json.loads(imagen.text('V'))),30)
-        self.assertEqual(len(json.loads(imagen.text('Arcos'))),126)
+        self.assertEqual(len(json.loads(imagen.text('Arcos'))),64)
         lienzo.close()
 
 

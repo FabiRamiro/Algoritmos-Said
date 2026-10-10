@@ -4,6 +4,12 @@ from __future__ import annotations
 from dataclasses import replace
 from math import hypot, inf
 from pathlib import Path
+import sys
+
+# Permite usar la pantalla compartida al ejecutar este proyecto por separado.
+if str(Path(__file__).resolve().parent.parent) not in sys.path:
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+from pantalla_carga import TemporizadorCapturas
 import json
 import time
 
@@ -390,8 +396,7 @@ class Ventana(QMainWindow):
         self.panel_detalle.hide()
         espacio.addWidget(self.banda_paso)
         self.construir_controles(espacio)
-        self.lote_timer = QTimer(self)
-        self.lote_timer.timeout.connect(self.procesar_captura)
+        self.lote_timer = TemporizadorCapturas(self)
         self.lote_pendientes = []
         self.pulso = QTimer(self)
         self.pulso.timeout.connect(self.avanzar_reloj)

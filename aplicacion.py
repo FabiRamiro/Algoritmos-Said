@@ -14,11 +14,12 @@ import sys
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QFrame, QGridLayout,
-    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QProgressDialog, QPushButton,
+    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton,
     QStackedWidget, QVBoxLayout, QWidget)
 
 from cargador import importar_aislado
 import diapositivas
+from pantalla_carga import completar_capturas
 
 RAIZ = Path(__file__).resolve().parent
 tema = importar_aislado(RAIZ / "Dijkstra_13_69", "tema", "tema_comun")
@@ -261,27 +262,7 @@ class Laboratorio(QMainWindow):
         return [i for i in esperadas if i not in sesion.guardados]
 
     def completar_capturas(self, vista, faltan):
-        # Se detiene la exportación de la vista para no guardar dos veces lo mismo.
-        vista.lote_timer.stop()
-        vista.lote_pendientes = []
-        progreso = QProgressDialog("Guardando capturas…", "Cancelar", 0, len(faltan), self)
-        progreso.setWindowTitle("Crear diapositivas")
-        progreso.setWindowModality(Qt.WindowModality.WindowModal)
-        progreso.setMinimumDuration(300)
-        try:
-            for n, indice in enumerate(faltan):
-                if progreso.wasCanceled():
-                    return False
-                progreso.setValue(n)
-                vista.capturas.guardar(indice)
-                QApplication.processEvents()
-        finally:
-            progreso.setValue(len(faltan))
-            # Cada proyecto llama distinto a su contador de capturas.
-            for nombre in ("mostrar_estado_capturas", "estado_guardado"):
-                if hasattr(vista, nombre):
-                    getattr(vista, nombre)()
-        return True
+        return completar_capturas(vista, faltan)
 
     def crear_diapositivas(self):
         vista = self.vistas.get(self.actual)

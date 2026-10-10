@@ -1,5 +1,11 @@
 """Explorador oscuro con grafo, matrices completas e iteraciones de Floyd."""
 from pathlib import Path
+import sys
+
+# Permite usar la pantalla compartida al ejecutar este proyecto por separado.
+if str(Path(__file__).resolve().parent.parent) not in sys.path:
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+from pantalla_carga import TemporizadorCapturas
 from dataclasses import replace
 import json
 from PySide6.QtCore import Qt, QTimer, QUrl
@@ -114,7 +120,7 @@ class Ventana(QMainWindow):
         pie.addWidget(self.excel_btn); root.addLayout(pie)
         self.automatico.setToolTip('Guardar PNG al avanzar puede ralentizar la navegación. También puedes usar Guardar todos al terminar.')
         self.reloj = QTimer(self); self.reloj.timeout.connect(self.avanzar)
-        self.lote_timer = QTimer(self); self.lote_timer.timeout.connect(self.procesar_captura)
+        self.lote_timer = TemporizadorCapturas(self)
         self.llenar_selectores()
         self.origen.currentIndexChanged.connect(self.cambiar_consulta)
         self.destino.currentIndexChanged.connect(self.cambiar_consulta)

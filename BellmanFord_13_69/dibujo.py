@@ -81,10 +81,6 @@ class Lienzo(QWidget):
         path = QPainterPath(a)
         if arista.u == arista.v:
             path.cubicTo(a+QPointF(-70,-95),a+QPointF(70,-95),a)
-        elif arista.id == "e09" and {arista.u, arista.v} == {7, 1}:
-            # El arco superior de la foto rodea los nodos centrales.
-            path.cubicTo(QPointF(a.x()+230, a.y()-130),
-                         QPointF(b.x()+60, b.y()-360), b)
         else:
             path.quadTo(c, b)
         return path

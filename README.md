@@ -1,6 +1,6 @@
 # Algoritmos de caminos mínimos
 
-Visualizador interactivo de cuatro algoritmos clásicos de caminos mínimos: Dijkstra, Bellman-Ford, Floyd-Warshall y A*. Los cuatro trabajan sobre el mismo grafo, transcrito de una fotografía, y buscan el camino del nodo 13 al nodo 69.
+Visualizador interactivo de cuatro algoritmos clásicos de caminos mínimos: Dijkstra, Bellman-Ford, Floyd-Warshall y A*. Trabajan sobre versiones del grafo del ejercicio y consultan el camino del nodo 13 al nodo 69.
 
 Cada algoritmo se ejecuta paso a paso. En cada momento se puede ver qué nodo se está procesando, qué arista se examina, qué distancias cambian y por qué. Los algoritmos están implementados desde cero en Python, sin bibliotecas de grafos, y la interfaz usa PySide6 (Qt).
 
@@ -15,18 +15,48 @@ Cada algoritmo se ejecuta paso a paso. En cada momento se puede ver qué nodo se
 
 Además, la raíz del repositorio contiene una aplicación que reúne los cuatro algoritmos en una sola ventana.
 
+## Video MP4 con audio durante el guardado
+
+Al pulsar **Guardar todos**, las capturas se dibujan y se escriben en un hilo de
+trabajo. La ventana queda libre para reproducir el video a su velocidad original,
+mostrar el progreso y permitir pausar. La captura que esté escribiéndose termina
+antes de pausar, para no dejar un PNG incompleto. También se usa este mecanismo
+al completar capturas para crear diapositivas.
+
+Coloca estos archivos junto al `main.py` de la raíz:
+
+| Algoritmo | Video con su audio incluido |
+| --- | --- |
+| Dijkstra | `dancing1.mp4` |
+| Bellman-Ford | `dancing2.mp4` |
+| Floyd-Warshall | `dancing3.mp4` |
+| A* | `dancing4.mp4` |
+
+El video y su audio se reproducen juntos en bucle, con volumen inicial del 35 %.
+Se detienen al terminar, pausar o fallar el guardado. Al continuar, el video se
+reinicia. No se necesita un MP3 separado: se usa la pista de audio del MP4; un
+video sin pista de audio se reproduce en silencio. La imagen conserva sus
+proporciones. No hace falta instalar otra dependencia: el reproductor utiliza
+QtMultimedia y QtMultimediaWidgets, incluidos en PySide6.
+
+Para usar otras rutas o nombres, edita el diccionario `MULTIMEDIA` de
+`pantalla_carga.py`. Si falta el MP4 o no puede reproducirse, se muestra un
+mensaje de carga y el guardado continúa. Los antiguos GIF y MP3 ya no se usan.
+
+Prueba automatizada: `python -m unittest test_pantalla_carga -v`.
+
 ## El grafo
 
-El grafo tiene 30 nodos y 63 aristas, y no es dirigido: cada conexión se puede recorrer en ambos sentidos. Las posiciones de los nodos reproducen la fotografía original (`grafo_original.jpeg` en cada carpeta). Los datos están en el archivo `grafo.json` de cada proyecto.
+Los datos están en el archivo `grafo.json` de cada proyecto. Todos tienen 30 nodos.
 
-Hay dos versiones de los pesos:
+Hay dos versiones del grafo:
 
-- **Dijkstra y A\*** usan pesos no negativos, como exigen ambos algoritmos.
-- **Bellman-Ford y Floyd-Warshall** usan una versión en la que ocho aristas tienen peso negativo, para mostrar cómo tratan ese caso.
+- **Dijkstra, A\* y Floyd-Warshall** usan las mismas 63 aristas no dirigidas con pesos positivos.
+- **Bellman-Ford** usa las direcciones de la imagen actualizada: 64 arcos, ocho pesos negativos y ningún ciclo negativo. La conexión de peso 3 entre 12 y 16 tiene ambos sentidos; el arco de peso 16 va de 12 a 16. En esta versión el nodo central inferior es 18, en lugar de 78.
 
 ## Resultados
 
-Con los pesos no negativos, Dijkstra y A* encuentran el mismo camino:
+Los cuatro algoritmos, cada uno con su versión del grafo, encuentran este camino:
 
 ```text
 13 → 16 → 17 → 69    costo 3 + 7 + 4 = 14
@@ -34,7 +64,7 @@ Con los pesos no negativos, Dijkstra y A* encuentran el mismo camino:
 
 A* llega a ese resultado fijando 7 nodos, frente a los 10 de Dijkstra. Su heurística es la distancia en línea recta hasta el destino, multiplicada por una escala que garantiza que nunca supere el costo real. Así se conserva la garantía de obtener el camino mínimo.
 
-Con la versión de pesos negativos, Bellman-Ford y Floyd-Warshall informan que **no existe un costo mínimo finito**. En un grafo no dirigido, una arista con peso negativo se puede recorrer de ida y vuelta indefinidamente, y cada recorrido reduce el costo. Es decir, cada arista negativa forma un ciclo negativo. Los dos algoritmos detectan esta situación y la muestran en lugar de devolver un valor incorrecto.
+Bellman-Ford conserva pesos negativos, pero las direcciones del nuevo grafo impiden formar ciclos de costo negativo. Una arista negativa por sí sola no significa que exista un ciclo negativo. Floyd-Warshall utiliza ahora pesos positivos y obtiene distancias finitas para los 900 pares. Ambos algoritmos conservan la detección de ciclos negativos para otros grafos importados.
 
 ## Requisitos
 
@@ -126,7 +156,7 @@ Las capturas de una sesión se pueden convertir en una presentación, con una di
 
 El tamaño de las diapositivas sigue la proporción de las capturas, así que las imágenes ocupan toda la página.
 
-En la aplicación unificada, el botón **Crear diapositivas** de la barra superior convierte la sesión del algoritmo abierto. Si faltan capturas, ofrece guardarlas primero para que la presentación muestre el recorrido completo. Cuando una sesión tiene más de 300 pasos para capturar, como Bellman-Ford sobre el grafo con pesos negativos (más de 5000), solo se usan las capturas de los pasos que ya se recorrieron.
+En la aplicación unificada, el botón **Crear diapositivas** de la barra superior convierte la sesión del algoritmo abierto. Si faltan capturas, ofrece guardarlas primero para que la presentación muestre el recorrido completo. Cuando una sesión tiene más de 300 pasos para capturar, solo se usan las capturas de los pasos que ya se recorrieron.
 
 También se puede convertir cualquier carpeta de capturas desde la terminal:
 

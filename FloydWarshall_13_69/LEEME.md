@@ -73,35 +73,31 @@ guarda instantáneas, no fórmulas de recálculo: si cambias pesos, exporta otra
 No requiere Excel instalado ni nuevas dependencias de Python. Para reemplazar
 un archivo abierto en Excel, ciérralo primero.
 
-## Pesos negativos confirmados
+## Pesos positivos
 
-El grafo es **no dirigido**. Estos pesos se aplican en ambos sentidos, tanto aquí como
-en Bellman-Ford; Dijkstra conserva sus datos positivos:
+Floyd-Warshall usa el grafo **no dirigido con pesos positivos**, igual que Dijkstra.
+Estas ocho conexiones vuelven a tener peso positivo:
 
 | Conexión | Peso |
 | --- | ---: |
-| 24–11 | -7 |
-| 21–11 | -2 |
-| 6–9 | -7 |
-| 5–20 | -2 |
-| 3–69 | -6 |
-| 666–13 | -777 |
-| 9–10 | -3 |
-| 23–16 | -11 |
+| 24–11 | 7 |
+| 21–11 | 2 |
+| 6–9 | 7 |
+| 5–20 | 2 |
+| 3–69 | 6 |
+| 666–13 | 777 |
+| 9–10 | 3 |
+| 23–16 | 11 |
 
-Un peso negativo no impide usar Floyd–Warshall. Un **ciclo negativo** sí impide tener
-un mínimo finito para los pares que pueden pasar por él. Por ejemplo:
+Los 900 pares tienen distancias finitas. Para la consulta inicial:
 
 ```text
-24 → 11 → 24 cuesta -7 + -7 = -14.
-Repetirlo dos veces cuesta -28; tres veces, -42; etc.
+13 → 16 → 17 → 69 cuesta 3 + 7 + 4 = 14.
 ```
 
-Como el grafo entregado es conexo y no dirigido, sus 900 pares están afectados.
-Al finalizar se muestra **D = −∞**, **R = —**, y no se inventa una ruta mínima.
-`∞` significa que no hay camino; `−∞` significa que hay recorridos cuyo costo
-puede disminuir indefinidamente. Durante las iteraciones se conservan los cálculos
-provisionales para estudiar el proceso; la normalización a `−∞` ocurre al final.
+La versión dirigida con pesos negativos corresponde únicamente a Bellman-Ford.
+Floyd conserva la detección de ciclos negativos si se importa otro grafo:
+`∞` significa sin camino y `−∞` significa sin mínimo finito por ciclo negativo.
 
 ## Primero entendamos el problema
 
@@ -152,13 +148,13 @@ se compara el camino anterior con el que permite usar `k`.
 python -m unittest discover -s .\FloydWarshall_13_69 -v
 ```
 
-Se contrasta con una implementación independiente de Bellman-Ford, incluyendo grafos
-aleatorios, pesos negativos sin ciclos, ciclos en otra componente, bucles, empates,
-aristas paralelas, rutas, ocho pesos solicitados, navegación y metadatos PNG.
+Se comprueba que los pesos coincidan con Dijkstra y que las distancias de los
+900 pares coincidan con un cálculo independiente mediante una cola de prioridad.
+También se comprueba la ruta 13 → 16 → 17 → 69 y su costo 14.
 
 **Práctica:** cambia la consulta a dos nodos, selecciona una iteración y explica una
-celda en negritas usando sus dos sumandos. Para practicar rutas finitas puedes abrir
-una copia de un grafo positivo o un grafo dirigido sin ciclos negativos.
+celda en negritas usando sus dos sumandos. El grafo predeterminado ya tiene
+pesos positivos y permite practicar rutas finitas.
 
 **Prompt de práctica:** «Explícame una iteración de Floyd–Warshall: identifica i, j y k,
 calcula el costo candidato y muestra cómo cambian D y R sin saltarte la comparación».
